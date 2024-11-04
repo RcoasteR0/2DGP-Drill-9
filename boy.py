@@ -1,6 +1,8 @@
 # 이것은 각 상태들을 객체로 구현한 것임.
 
 from pico2d import get_time, load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_SPACE, SDLK_LEFT, SDLK_RIGHT
+
+import game_world
 from state_machine import *
 
 
@@ -22,6 +24,8 @@ class Idle:
 
     @staticmethod
     def exit(boy, e):
+        if space_down(e):
+            boy.fire_ball()
         pass
 
     @staticmethod
@@ -72,6 +76,8 @@ class Run:
 
     @staticmethod
     def exit(boy, e):
+        if space_down(e):
+            boy.fire_ball()
         pass
 
 
@@ -92,15 +98,15 @@ class Run:
 class Boy:
 
     def __init__(self):
-        self.x, self.y = 400, 90
+        self.x, self.y = 400, 50
         self.face_dir = 1
         self.image = load_image('animation_sheet.png')
         self.state_machine = StateMachine(self)
         self.state_machine.start(Idle)
         self.state_machine.set_transitions(
             {
-                Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep},
-                Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle},
+                Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep, space_down: Idle},
+                Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle, space_down: Run},
                 Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle}
             }
         )
@@ -115,4 +121,10 @@ class Boy:
 
     def draw(self):
         self.state_machine.draw()
+
+    def fire_ball(self):
+        print('FIRE BALL')
+        from ball import Ball
+        ball = Ball(self.x, self.y, self.face_dir * 10)
+        game_world.add_object(ball, 0)
 
